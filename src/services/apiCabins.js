@@ -11,6 +11,17 @@ export const getCabins = async () => {
   return data
 }
 
+export const createCabin = async (newCabin) => {
+  const { data, error } = await supabase.from('cabins').insert([newCabin])
+
+  if (error) {
+    console.log(error)
+    throw new Error('Something went wrong ')
+  }
+
+  return data
+}
+
 export const deleteCabin = async (id) => {
   const { data, error } = await supabase.from('cabins').delete().eq('id', id)
 
