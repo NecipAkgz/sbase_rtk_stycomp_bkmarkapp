@@ -8,7 +8,7 @@ import Textarea from '../../ui/Textarea'
 import { useCreateCabin } from './useCreateCabin'
 import { useUpdateCabin } from './useUpdateCabin'
 
-function CreateCabinForm({ cabinToEdit = {} }) {
+function CreateCabinForm({ cabinToEdit = {}, onClose }) {
   const { id: editId, ...editValues } = cabinToEdit
   const isEditSession = Boolean(editId)
 
@@ -27,10 +27,23 @@ function CreateCabinForm({ cabinToEdit = {} }) {
     if (isEditSession) {
       editCabin(
         { newCabinData: { ...data, image }, id: editId },
-        { onSuccess: () => reset() }
+        {
+          onSuccess: () => {
+            reset()
+            onClose?.()
+          },
+        }
       )
     } else {
-      createCabin({ ...data, image }, { onSuccess: () => reset() })
+      createCabin(
+        { ...data, image },
+        {
+          onSuccess: () => {
+            reset()
+            onClose?.()
+          },
+        }
+      )
     }
   }
 
@@ -39,7 +52,9 @@ function CreateCabinForm({ cabinToEdit = {} }) {
   }
 
   return (
-    <Form onSubmit={handleSubmit(onSubmit, onError)}>
+    <Form
+      onSubmit={handleSubmit(onSubmit, onError)}
+      type={onClose ? 'modal' : 'regular'}>
       <FormRow label='Cabin name' error={errors?.name?.message}>
         <Input
           type='text'
@@ -119,7 +134,7 @@ function CreateCabinForm({ cabinToEdit = {} }) {
       </FormRow>
 
       <FormRow>
-        <Button variation='secondary' type='reset'>
+        <Button variation='secondary' type='reset' onClick={() => onClose?.()}>
           Cancel
         </Button>
         <Button disabled={isWorking}>
