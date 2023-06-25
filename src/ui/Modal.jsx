@@ -1,3 +1,4 @@
+import { cloneElement, createContext, useContext, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { HiXMark } from 'react-icons/hi2'
 import styled from 'styled-components'
@@ -51,17 +52,54 @@ const Button = styled.button`
   }
 `
 
-function Modal({ children, onClose }) {
+const ModalContext = createContext()
+
+// Define a Modal component, which maintains the state of the current open modal window:
+function Modal({ children }) {
+  const [openName, setOpenName] = useState('')
+
+  const close = () => setOpenName('')
+  const open = setOpenName
+
+  return (
+    <ModalContext.Provider value={{ openName, close, open }}>
+      {children}
+    </ModalContext.Provider>
+  )
+}
+
+// Define an Open component that creates clickable elements to trigger selected modal windows:
+function Open({ children, opens: opensWindowName }) {
+  const { open } = useContext(ModalContext)
+
+  // Attach the `open` function to the onClick event of the passed `children` element:
+  return cloneElement(children, { onClick: () => open(opensWindowName) })
+}
+
+// Define a Window component that represents an individual modal window:
+function Window({ children, name }) {
+  const { openName, close } = useContext(ModalContext)
+
+  // If the `name` prop does not match the current `openName` state, do not render this modal window:
+  if (name !== openName) return null
+
+  // Render a new modal window using createPortal(), with close button functionality:
   return createPortal(
     <Overlay>
       <StyledModal>
-        <Button onClick={onClose}>
+        <Button onClick={close}>
           <HiXMark />
         </Button>
-        <div>{children}</div>
+
+        <div>{cloneElement(children, { onClose: close })}</div>
       </StyledModal>
     </Overlay>,
     document.body
   )
 }
+
+// Add sub-components `Open` and `Window` as properties to the `Modal` component:
+Modal.Open = Open
+Modal.Window = Window
+
 export default Modal
